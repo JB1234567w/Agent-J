@@ -39,6 +39,7 @@ export interface ResearchArtifact {
   content: string;
   metadata: Record<string, unknown>;
   createdAt: Date;
+  retrievedAt: Date; // Timestamp when the information was retrieved
 }
 
 export interface Citation {

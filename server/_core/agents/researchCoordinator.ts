@@ -71,6 +71,15 @@ export class ResearchCoordinator {
       this.state.currentPhase = "planning";
       this.state.progressPercentage = 10;
 
+      // Check for stale artifacts before planning new research
+      const existingFindings = this.memoryManager.getMemory(request.sessionId)?.findings || [];
+      const staleFindings = await this.orchestrator.verifyFreshness(existingFindings);
+
+      if (staleFindings.length > 0) {
+        console.warn(`Found ${staleFindings.length} stale findings. Re-evaluating or re-researching might be needed.`);
+        // For now, we'll proceed with fresh research, but this can be expanded to re-research stale items.
+      }
+
       const plan = await this.orchestrator.planResearch(request.query, request.context || {});
       const tasks = await this.orchestrator.decomposeTasks(request.query, plan);
 
@@ -168,6 +177,7 @@ export class ResearchCoordinator {
             executedAt: new Date(),
           },
           createdAt: new Date(),
+          retrievedAt: new Date(),
         };
 
         findings.push(artifact);
@@ -205,6 +215,7 @@ export class ResearchCoordinator {
           context: { finding },
           status: "idle",
           createdAt: new Date(),
+          retrievedAt: new Date(),
           updatedAt: new Date(),
         };
 
@@ -220,6 +231,7 @@ export class ResearchCoordinator {
               sourceArtifactId: finding.id,
             },
             createdAt: new Date(),
+            retrievedAt: new Date(),
           });
         }
       } catch (error) {
@@ -245,7 +257,7 @@ export class ResearchCoordinator {
           context: { finding },
           status: "idle",
           createdAt: new Date(),
-          updatedAt: new Date(),
+          retrievedAt: new Date(),
         };
 
         const result = await this.factCheckAgent.execute(task);

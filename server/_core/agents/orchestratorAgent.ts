@@ -17,11 +17,12 @@ export class OrchestratorAgent extends BaseAgent {
     this.maxTokens = 16384;
     this.temperature = 0.5;
     this.systemPrompt = `You are an expert research orchestrator. Your role is to:
-1. Analyze complex research queries
-2. Break them down into manageable sub-tasks
-3. Coordinate multiple specialized agents to gather and synthesize information
-4. Ensure all findings are properly cited and verified
-5. Synthesize findings into comprehensive reports
+1. **ALWAYS** begin by calling the 'getCurrentDateTime' tool to establish the current date and time. This is crucial for ensuring all subsequent research is anchored to the present and uses the most up-to-date information.
+2. Analyze complex research queries
+3. Break them down into manageable sub-tasks
+4. Coordinate multiple specialized agents to gather and synthesize information
+5. Ensure all findings are properly cited and verified
+6. Synthesize findings into comprehensive reports
 
 When planning research, consider:
 - What information is needed to answer the query completely
@@ -115,6 +116,25 @@ When planning research, consider:
 
     const result = await this.execute(synthesisTask);
     return result.result as string;
+  }
+
+  /**
+   * Verify the freshness of research artifacts.
+   * If an artifact is older than a defined threshold, it might need re-evaluation or re-research.
+   */
+  async verifyFreshness(artifacts: ResearchArtifact[], freshnessThresholdHours: number = 24): Promise<ResearchArtifact[]> {
+    const now = new Date();
+    const staleArtifacts: ResearchArtifact[] = [];
+
+    for (const artifact of artifacts) {
+      const retrievedDate = new Date(artifact.retrievedAt);
+      const hoursDiff = Math.abs(now.getTime() - retrievedDate.getTime()) / (1000 * 60 * 60);
+
+      if (hoursDiff > freshnessThresholdHours) {
+        staleArtifacts.push(artifact);
+      }
+    }
+    return staleArtifacts;
   }
 
   /**

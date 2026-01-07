@@ -4,6 +4,7 @@
  */
 
 import { invokeLLM, Message, Tool } from "../llm";
+import { getCurrentDateTime } from "./tools/timeDate";
 import { AgentRole, AgentStatus, AgentTask } from "./types";
 
 export abstract class BaseAgent {
@@ -92,7 +93,20 @@ export abstract class BaseAgent {
    * Get the tools available to this agent
    */
   protected getTools(): Tool[] {
-    return [];
+    return [
+      {
+        type: "function",
+        function: {
+          name: "getCurrentDateTime",
+          description: "Get the current date and time in ISO format, along with localized date, time, timestamp, and timezone.",
+          parameters: {
+            type: "object",
+            properties: {},
+            required: [],
+          },
+        },
+      },
+    ];
   }
 
   /**
@@ -129,7 +143,12 @@ export abstract class BaseAgent {
    * Execute a specific tool
    */
   protected async executeTool(toolName: string, args: Record<string, unknown>): Promise<unknown> {
-    throw new Error(`Tool ${toolName} not implemented for ${this.role}`);
+    switch (toolName) {
+      case "getCurrentDateTime":
+        return getCurrentDateTime();
+      default:
+        throw new Error(`Tool ${toolName} not implemented for ${this.role}`);
+    }
   }
 
   /**
