@@ -1,5 +1,5 @@
-import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
+import { eq } from "drizzle-orm";
 import {
   InsertUser,
   users,
@@ -9,6 +9,11 @@ import {
   annotations,
   insights,
   exports,
+  researchPlans,
+  agentTasks,
+  researchArtifacts,
+  citations,
+  researchMemory,
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -334,4 +339,215 @@ export async function getExportsBySessionId(sessionId: number) {
     .from(exports)
     .where(eq(exports.sessionId, sessionId))
     .orderBy((t) => t.createdAt);
+}
+
+
+// Research Plan Queries
+export async function createResearchPlan(
+  sessionId: number,
+  userId: number,
+  query: string,
+  objectives: string[],
+  strategy: string,
+  estimatedSteps: number,
+  id: string
+) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  return await db.insert(researchPlans).values({
+    id,
+    sessionId,
+    userId,
+    query,
+    objectives: JSON.stringify(objectives),
+    strategy,
+    estimatedSteps,
+  });
+}
+
+export async function getResearchPlanById(id: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const result = await db
+    .select()
+    .from(researchPlans)
+    .where(eq(researchPlans.id, id))
+    .limit(1);
+
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function getResearchPlansBySessionId(sessionId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  return await db
+    .select()
+    .from(researchPlans)
+    .where(eq(researchPlans.sessionId, sessionId));
+}
+
+// Agent Task Queries
+export async function createAgentTask(
+  id: string,
+  researchPlanId: string,
+  agentRole: string,
+  description: string,
+  context: Record<string, unknown>,
+  status: string,
+  parentTaskId?: string
+) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  return await db.insert(agentTasks).values({
+    id,
+    researchPlanId,
+    parentTaskId,
+    agentRole: agentRole as any,
+    description,
+    context: JSON.stringify(context),
+    status: status as any,
+  });
+}
+
+export async function updateAgentTask(
+  id: string,
+  updates: {
+    status?: string;
+    result?: unknown;
+    error?: string;
+  }
+) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const updateSet: Record<string, unknown> = {};
+  if (updates.status) updateSet.status = updates.status;
+  if (updates.result) updateSet.result = JSON.stringify(updates.result);
+  if (updates.error) updateSet.error = updates.error;
+
+  return await db
+    .update(agentTasks)
+    .set(updateSet)
+    .where(eq(agentTasks.id, id));
+}
+
+export async function getAgentTasksByResearchPlanId(researchPlanId: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  return await db
+    .select()
+    .from(agentTasks)
+    .where(eq(agentTasks.researchPlanId, researchPlanId));
+}
+
+// Research Artifact Queries
+export async function createResearchArtifact(
+  id: string,
+  taskId: string,
+  sessionId: number,
+  type: string,
+  content: string,
+  metadata: Record<string, unknown>
+) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  return await db.insert(researchArtifacts).values({
+    id,
+    taskId,
+    sessionId,
+    type: type as any,
+    content,
+    metadata: JSON.stringify(metadata),
+  });
+}
+
+export async function getResearchArtifactsBySessionId(sessionId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  return await db
+    .select()
+    .from(researchArtifacts)
+    .where(eq(researchArtifacts.sessionId, sessionId));
+}
+
+// Citation Queries
+export async function createCitation(
+  id: string,
+  artifactId: string,
+  source: string,
+  url?: string,
+  title?: string
+) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  return await db.insert(citations).values({
+    id,
+    artifactId,
+    source,
+    url,
+    title,
+  });
+}
+
+export async function getCitationsByArtifactId(artifactId: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  return await db
+    .select()
+    .from(citations)
+    .where(eq(citations.artifactId, artifactId));
+}
+
+// Research Memory Queries
+export async function createOrUpdateResearchMemory(
+  sessionId: number,
+  shortTermMemory: string,
+  longTermMemory: string
+) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const existing = await db
+    .select()
+    .from(researchMemory)
+    .where(eq(researchMemory.sessionId, sessionId))
+    .limit(1);
+
+  if (existing.length > 0) {
+    return await db
+      .update(researchMemory)
+      .set({
+        shortTermMemory,
+        longTermMemory,
+      })
+      .where(eq(researchMemory.sessionId, sessionId));
+  } else {
+    return await db.insert(researchMemory).values({
+      sessionId,
+      shortTermMemory,
+      longTermMemory,
+    });
+  }
+}
+
+export async function getResearchMemory(sessionId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const result = await db
+    .select()
+    .from(researchMemory)
+    .where(eq(researchMemory.sessionId, sessionId))
+    .limit(1);
+
+  return result.length > 0 ? result[0] : undefined;
 }

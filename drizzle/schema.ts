@@ -100,3 +100,73 @@ export const exports = mysqlTable("exports", {
 
 export type Export = typeof exports.$inferSelect;
 export type InsertExport = typeof exports.$inferInsert;
+
+// Multi-Agent Research System Tables
+
+export const researchPlans = mysqlTable("research_plans", {
+  id: varchar("id", { length: 64 }).primaryKey(),
+  sessionId: int("sessionId").notNull(),
+  userId: int("userId").notNull(),
+  query: text("query").notNull(),
+  objectives: text("objectives"), // JSON array
+  strategy: text("strategy").notNull(),
+  estimatedSteps: int("estimatedSteps").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type ResearchPlan = typeof researchPlans.$inferSelect;
+export type InsertResearchPlan = typeof researchPlans.$inferInsert;
+
+export const agentTasks = mysqlTable("agent_tasks", {
+  id: varchar("id", { length: 64 }).primaryKey(),
+  researchPlanId: varchar("researchPlanId", { length: 64 }).notNull(),
+  parentTaskId: varchar("parentTaskId", { length: 64 }),
+  agentRole: mysqlEnum("agentRole", ["orchestrator", "searcher", "extractor", "fact_checker", "synthesizer"]).notNull(),
+  description: text("description").notNull(),
+  context: text("context"), // JSON
+  status: mysqlEnum("status", ["idle", "thinking", "executing", "waiting", "completed", "failed"]).notNull(),
+  result: text("result"), // JSON
+  error: text("error"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type AgentTask = typeof agentTasks.$inferSelect;
+export type InsertAgentTask = typeof agentTasks.$inferInsert;
+
+export const researchArtifacts = mysqlTable("research_artifacts", {
+  id: varchar("id", { length: 64 }).primaryKey(),
+  taskId: varchar("taskId", { length: 64 }).notNull(),
+  sessionId: int("sessionId").notNull(),
+  type: mysqlEnum("type", ["source", "finding", "analysis", "citation", "verified"]).notNull(),
+  content: text("content").notNull(),
+  metadata: text("metadata"), // JSON
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type ResearchArtifact = typeof researchArtifacts.$inferSelect;
+export type InsertResearchArtifact = typeof researchArtifacts.$inferInsert;
+
+export const citations = mysqlTable("citations", {
+  id: varchar("id", { length: 64 }).primaryKey(),
+  artifactId: varchar("artifactId", { length: 64 }).notNull(),
+  source: varchar("source", { length: 512 }).notNull(),
+  url: text("url"),
+  title: text("title"),
+  accessedAt: timestamp("accessedAt").defaultNow().notNull(),
+});
+
+export type Citation = typeof citations.$inferSelect;
+export type InsertCitation = typeof citations.$inferInsert;
+
+export const researchMemory = mysqlTable("research_memory", {
+  id: int("id").autoincrement().primaryKey(),
+  sessionId: int("sessionId").notNull().unique(),
+  shortTermMemory: text("shortTermMemory"),
+  longTermMemory: text("longTermMemory"),
+  lastUpdated: timestamp("lastUpdated").defaultNow().onUpdateNow().notNull(),
+});
+
+export type ResearchMemoryRecord = typeof researchMemory.$inferSelect;
+export type InsertResearchMemory = typeof researchMemory.$inferInsert;

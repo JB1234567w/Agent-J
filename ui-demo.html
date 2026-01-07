@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agent-J UI Components Demo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 2rem;
+        }
+
+        .demo-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 3rem;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .components-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        }
+
+        .card-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1.5rem;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .card-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .card-description {
+            font-size: 0.875rem;
+            opacity: 0.9;
+        }
+
+        .card-content {
+            padding: 1.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+            font-size: 0.875rem;
+        }
+
+        .input, .select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .input:focus, .select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            font-size: 0.875rem;
+        }
+
+        .button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 15px -3px rgba(102, 126, 234, 0.4);
+        }
+
+        .button:active {
+            transform: scale(0.98);
+        }
+
+        .button.secondary {
+            background: #f3f4f6;
+            color: #1f2937;
+            border: 1px solid #e5e7eb;
+        }
+
+        .button.secondary:hover {
+            background: #e5e7eb;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e5e7eb;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 0.5rem;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            width: 65%;
+            transition: width 0.3s ease;
+        }
+
+        .progress-text {
+            font-size: 0.75rem;
+            color: #6b7280;
+            margin-top: 0.25rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin: 1.5rem 0;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 1rem;
+            background: #f9fafb;
+            border-radius: 6px;
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: #6b7280;
+            text-transform: uppercase;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .provider-option {
+            display: flex;
+            align-items: center;
+            padding: 1rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 0.75rem;
+        }
+
+        .provider-option:hover {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+
+        .provider-option.selected {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+
+        .provider-icon {
+            font-size: 1.5rem;
+            margin-right: 1rem;
+            color: #667eea;
+        }
+
+        .provider-info h3 {
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 0.25rem;
+        }
+
+        .provider-info p {
+            font-size: 0.75rem;
+            color: #6b7280;
+        }
+
+        .alert {
+            padding: 1rem;
+            border-radius: 6px;
+            margin-bottom: 1rem;
+            display: flex;
+            gap: 0.75rem;
+            align-items: flex-start;
+        }
+
+        .alert.success {
+            background: #d1fae5;
+            border: 1px solid #6ee7b7;
+            color: #065f46;
+        }
+
+        .alert.error {
+            background: #fee2e2;
+            border: 1px solid #fca5a5;
+            color: #7f1d1d;
+        }
+
+        .alert.info {
+            background: #dbeafe;
+            border: 1px solid #93c5fd;
+            color: #1e3a8a;
+        }
+
+        .alert-icon {
+            font-size: 1.25rem;
+            flex-shrink: 0;
+        }
+
+        .divider {
+            height: 1px;
+            background: #e5e7eb;
+            margin: 1.5rem 0;
+        }
+
+        .footer {
+            text-align: center;
+            color: white;
+            margin-top: 3rem;
+            opacity: 0.8;
+            font-size: 0.875rem;
+        }
+
+        @media (max-width: 768px) {
+            .components-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .header h1 {
+                font-size: 1.875rem;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="demo-container">
+        <!-- Header -->
+        <div class="header">
+            <h1>🚀 Agent-J Advanced Features</h1>
+            <p>Deep Research & Multi-Provider LLM Support</p>
+        </div>
+
+        <!-- Components Grid -->
+        <div class="components-grid">
+            <!-- Deep Research Panel -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <i class="fas fa-search"></i>
+                        Deep Research Panel
+                    </div>
+                    <div class="card-description">Conduct comprehensive research using multiple AI agents</div>
+                </div>
+                <div class="card-content">
+                    <div class="form-group">
+                        <label class="label">Research Query</label>
+                        <input type="text" class="input" placeholder="Enter your research query..." value="What are the latest developments in quantum computing?">
+                    </div>
+
+                    <div class="form-group">
+                        <button class="button" style="width: 100%;">
+                            <i class="fas fa-play"></i>
+                            Start Research
+                        </button>
+                    </div>
+
+                    <div class="divider"></div>
+
+                    <div class="alert success">
+                        <i class="fas fa-check-circle alert-icon"></i>
+                        <div>
+                            <strong>Research Complete</strong>
+                            <p>Successfully gathered and analyzed information from multiple sources</p>
+                        </div>
+                    </div>
+
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <div class="stat-label">Findings</div>
+                            <div class="stat-value">24</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">Citations</div>
+                            <div class="stat-value">18</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">Time</div>
+                            <div class="stat-value">3.2s</div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="label">Research Report</label>
+                        <div style="background: #f9fafb; padding: 1rem; border-radius: 6px; max-height: 200px; overflow-y: auto; font-size: 0.875rem; color: #6b7280; line-height: 1.5;">
+                            <p><strong>Quantum Computing Developments:</strong></p>
+                            <p>Recent breakthroughs in quantum error correction have shown promising results. IBM and Google have made significant progress in scaling quantum processors. The field is moving towards practical quantum advantage applications...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- LLM Provider Selector -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <i class="fas fa-brain"></i>
+                        LLM Provider Configuration
+                    </div>
+                    <div class="card-description">Select your preferred LLM provider and model</div>
+                </div>
+                <div class="card-content">
+                    <div class="form-group">
+                        <label class="label">LLM Provider</label>
+                        <div class="provider-option selected">
+                            <div class="provider-icon">⚡</div>
+                            <div class="provider-info">
+                                <h3>OpenAI</h3>
+                                <p>Use OpenAI GPT models via API</p>
+                            </div>
+                        </div>
+                        <div class="provider-option">
+                            <div class="provider-icon">☁️</div>
+                            <div class="provider-info">
+                                <h3>Google Gemini</h3>
+                                <p>Use Google Gemini models</p>
+                            </div>
+                        </div>
+                        <div class="provider-option">
+                            <div class="provider-icon">🖥️</div>
+                            <div class="provider-info">
+                                <h3>Ollama (Local)</h3>
+                                <p>Use local Ollama models</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="divider"></div>
+
+                    <div class="form-group">
+                        <label class="label">Model</label>
+                        <select class="select">
+                            <option>gpt-4.1-mini</option>
+                            <option>gpt-4.1-nano</option>
+                            <option>gemini-2.5-flash</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="label">API Key (Optional)</label>
+                        <input type="password" class="input" placeholder="sk-..." value="sk-••••••••••••••••">
+                        <p style="font-size: 0.75rem; color: #6b7280; margin-top: 0.5rem;">Leave empty to use server-side configuration</p>
+                    </div>
+
+                    <div class="alert info">
+                        <i class="fas fa-info-circle alert-icon"></i>
+                        <div>
+                            <strong>Provider Comparison</strong>
+                            <p>OpenAI: Fast & Reliable | Gemini: Advanced & Multimodal | Ollama: Private & Local</p>
+                        </div>
+                    </div>
+
+                    <button class="button" style="width: 100%;">
+                        <i class="fas fa-save"></i>
+                        Save Configuration
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Feature Comparison -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">
+                    <i class="fas fa-chart-bar"></i>
+                    Provider Comparison
+                </div>
+            </div>
+            <div class="card-content">
+                <div style="overflow-x: auto;">
+                    <table style="width: 100%; border-collapse: collapse; font-size: 0.875rem;">
+                        <thead>
+                            <tr style="background: #f9fafb; border-bottom: 2px solid #e5e7eb;">
+                                <th style="padding: 1rem; text-align: left; font-weight: 600; color: #1f2937;">Feature</th>
+                                <th style="padding: 1rem; text-align: center; font-weight: 600; color: #1f2937;">OpenAI</th>
+                                <th style="padding: 1rem; text-align: center; font-weight: 600; color: #1f2937;">Gemini</th>
+                                <th style="padding: 1rem; text-align: center; font-weight: 600; color: #1f2937;">Ollama</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr style="border-bottom: 1px solid #e5e7eb;">
+                                <td style="padding: 1rem; color: #1f2937;">Cost</td>
+                                <td style="padding: 1rem; text-align: center; color: #6b7280;">Paid API</td>
+                                <td style="padding: 1rem; text-align: center; color: #6b7280;">Paid API</td>
+                                <td style="padding: 1rem; text-align: center; color: #10b981; font-weight: 600;">Free (Local)</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid #e5e7eb;">
+                                <td style="padding: 1rem; color: #1f2937;">Setup</td>
+                                <td style="padding: 1rem; text-align: center; color: #6b7280;">API Key</td>
+                                <td style="padding: 1rem; text-align: center; color: #6b7280;">API Key</td>
+                                <td style="padding: 1rem; text-align: center; color: #6b7280;">Local Install</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid #e5e7eb;">
+                                <td style="padding: 1rem; color: #1f2937;">Speed</td>
+                                <td style="padding: 1rem; text-align: center; color: #6b7280;">⚡ Fast</td>
+                                <td style="padding: 1rem; text-align: center; color: #6b7280;">⚡ Fast</td>
+                                <td style="padding: 1rem; text-align: center; color: #6b7280;">Hardware Dependent</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid #e5e7eb;">
+                                <td style="padding: 1rem; color: #1f2937;">Privacy</td>
+                                <td style="padding: 1rem; text-align: center; color: #6b7280;">Cloud</td>
+                                <td style="padding: 1rem; text-align: center; color: #6b7280;">Cloud</td>
+                                <td style="padding: 1rem; text-align: center; color: #10b981; font-weight: 600;">🔒 Local</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 1rem; color: #1f2937;">Multimodal</td>
+                                <td style="padding: 1rem; text-align: center; color: #10b981; font-weight: 600;">✓</td>
+                                <td style="padding: 1rem; text-align: center; color: #10b981; font-weight: 600;">✓</td>
+                                <td style="padding: 1rem; text-align: center; color: #ef4444; font-weight: 600;">✗</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p>Agent-J Advanced Features Demo • Multi-Provider LLM Support • Deep Research System</p>
+        </div>
+    </div>
+
+    <script>
+        // Add interactivity
+        document.querySelectorAll('.provider-option').forEach(option => {
+            option.addEventListener('click', function() {
+                document.querySelectorAll('.provider-option').forEach(o => o.classList.remove('selected'));
+                this.classList.add('selected');
+            });
+        });
+
+        // Add button click handlers
+        document.querySelectorAll('.button').forEach(button => {
+            button.addEventListener('click', function() {
+                if (this.textContent.includes('Start Research')) {
+                    alert('Starting deep research...\n\nIn production, this would:\n1. Decompose your query\n2. Search multiple sources\n3. Extract and analyze data\n4. Verify facts\n5. Generate comprehensive report');
+                } else if (this.textContent.includes('Save')) {
+                    alert('Configuration saved!\n\nYour LLM provider settings have been saved to localStorage.');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
