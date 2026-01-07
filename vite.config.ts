@@ -38,7 +38,12 @@ export default defineConfig({
     ],
     fs: {
       strict: true,
-      deny: ["**/.*"],
+      deny: ["**/..*"],
+    },
+    hmr: {
+      host: "3000-ibrbpczv1v4l9qgk4yhop-d9e03d5e.us2.manus.computer",
+      port: 443,
+      protocol: "wss",
     },
   },
 });
