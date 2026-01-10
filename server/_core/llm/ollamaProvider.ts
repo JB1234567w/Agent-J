@@ -1,5 +1,5 @@
 import { LLMProvider } from "./LLMProvider";
-import { Message, Tool, ToolChoice, InvokeResult, ResponseFormat, JsonSchema, OutputSchema, ToolChoiceExplicit, InvokeParams, TextContent, ImageContent, FileContent, MessageContent } from "./types";
+import { Message, InvokeResult, InvokeParams, TextContent, ImageContent } from "./types";
 import { ENV } from "../env";
 
 export class OllamaProvider implements LLMProvider {
@@ -17,14 +17,24 @@ export class OllamaProvider implements LLMProvider {
       responseFormat,
     } = params;
 
-    const ollamaMessages = messages.map(msg => ({
-      role: msg.role,
-      content: typeof msg.content === 'string' ? msg.content : msg.content.map(c => {
-        if (c.type === 'text') return c.text;
-        if (c.type === 'image_url') return { image: c.image_url.url }; // Ollama expects base64 or local path for images
-        return '';
-      }).join('\n'),
-    }));
+    const ollamaMessages = messages.map(msg => {
+      let content = "";
+      if (typeof msg.content === "string") {
+        content = msg.content;
+      } else if (Array.isArray(msg.content)) {
+        content = msg.content.map(c => {
+          if (typeof c === "string") return c;
+          if (c.type === "text") return (c as TextContent).text;
+          if (c.type === "image_url") return `[Image: ${(c as ImageContent).image_url.url}]`;
+          return "";
+        }).join("\n");
+      }
+
+      return {
+        role: msg.role,
+        content,
+      };
+    });
 
     const payload: Record<string, unknown> = {
       model: model,
@@ -32,7 +42,8 @@ export class OllamaProvider implements LLMProvider {
       options: {
         num_predict: maxTokens,
       },
-      format: responseFormat?.type === 'json_object' ? 'json' : undefined,
+      format: responseFormat?.type === "json_object" ? "json" : undefined,
+      stream: false,
     };
 
     const response = await fetch(`${this.baseUrl}/chat`, {
@@ -52,7 +63,6 @@ export class OllamaProvider implements LLMProvider {
 
     const jsonResponse = await response.json();
 
-    // Convert Ollama response to InvokeResult format
     const invokeResult: InvokeResult = {
       id: jsonResponse.id || `ollama-chat-${Date.now()}`,
       created: Date.now(),
@@ -64,7 +74,7 @@ export class OllamaProvider implements LLMProvider {
             role: "assistant",
             content: jsonResponse.message.content,
           },
-          finish_reason: jsonResponse.done ? "stop" : null,
+          finish_reason: jsonResponse.done ? "stop" : "stop",
         },
       ],
       usage: {
@@ -87,7 +97,7 @@ export class OllamaProvider implements LLMProvider {
       return jsonResponse.models.map((m: { name: string }) => m.name);
     } catch (error) {
       console.error("Error fetching Ollama models:", error);
-      return [];
+      return ["llama3", "mistral", "phi3"];
     }
   }
 }

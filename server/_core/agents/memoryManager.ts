@@ -18,6 +18,7 @@ export class MemoryManager {
       sessionId,
       shortTermMemory: "",
       longTermMemory: "",
+      findings: [],
       lastUpdated: new Date(),
     };
 

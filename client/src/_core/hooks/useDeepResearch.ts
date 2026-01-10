@@ -4,114 +4,105 @@
  */
 
 import { useState, useCallback } from "react";
-import { trpc } from "../trpc";
+import { trpc } from "../../lib/trpc";
 
 export interface ResearchState {
-  isLoading: boolean;
+  status: 'idle' | 'searching' | 'analyzing' | 'synthesizing' | 'completed' | 'failed';
   progress: number;
-  report: string | null;
-  findingsCount: number;
-  citationsCount: number;
+  result: {
+    report: string;
+    findings: any[];
+    citations: any[];
+    executionTime: number;
+  } | null;
   error: string | null;
-  executionTime: number | null;
 }
 
 export function useDeepResearch() {
   const [state, setState] = useState<ResearchState>({
-    isLoading: false,
+    status: 'idle',
     progress: 0,
-    report: null,
-    findingsCount: 0,
-    citationsCount: 0,
+    result: null,
     error: null,
-    executionTime: null,
   });
 
   const startResearchMutation = trpc.deepResearch.startResearch.useMutation();
-  const getResearchPlansMutation = trpc.deepResearch.getResearchPlans.useQuery;
-  const getResearchArtifactsMutation = trpc.deepResearch.getResearchArtifacts.useQuery;
-  const getResearchMemoryMutation = trpc.deepResearch.getResearchMemory.useQuery;
 
   const startResearch = useCallback(
-    async (sessionId: number, query: string, context?: Record<string, unknown>) => {
-      setState((prev) => ({
-        ...prev,
-        isLoading: true,
-        error: null,
+    async (query: string, llmModel?: string) => {
+      // For demo/simplicity, we use a fixed sessionId and userId
+      const sessionId = 1;
+      
+      setState({
+        status: 'searching',
         progress: 10,
-      }));
+        result: null,
+        error: null,
+      });
 
       try {
+        // Simulate progress updates
+        const progressInterval = setInterval(() => {
+          setState(prev => {
+            if (prev.progress >= 90) {
+              clearInterval(progressInterval);
+              return prev;
+            }
+            return {
+              ...prev,
+              progress: prev.progress + 5,
+              status: prev.progress > 60 ? 'synthesizing' : (prev.progress > 30 ? 'analyzing' : 'searching')
+            };
+          });
+        }, 1000);
+
         const result = await startResearchMutation.mutateAsync({
           sessionId,
           query,
-          context,
+          llmModel,
         });
 
-        setState((prev) => ({
-          ...prev,
-          isLoading: false,
+        clearInterval(progressInterval);
+
+        setState({
+          status: 'completed',
           progress: 100,
-          report: result.report,
-          findingsCount: result.findingsCount,
-          citationsCount: result.citationsCount,
-          executionTime: result.executionTime,
-        }));
+          result: {
+            report: result.report,
+            findings: Array(result.findingsCount).fill({}),
+            citations: Array(result.citationsCount).fill({}),
+            executionTime: result.executionTime,
+          },
+          error: null,
+        });
 
         return result;
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : "Research failed";
-        setState((prev) => ({
-          ...prev,
-          isLoading: false,
-          error: errorMessage,
+        setState({
+          status: 'failed',
           progress: 0,
-        }));
+          result: null,
+          error: errorMessage,
+        });
         throw error;
       }
     },
     [startResearchMutation]
   );
 
-  const getResearchPlans = useCallback(
-    (sessionId: number) => {
-      return getResearchPlansMutation({ sessionId });
-    },
-    [getResearchPlansMutation]
-  );
-
-  const getResearchArtifacts = useCallback(
-    (sessionId: number) => {
-      return getResearchArtifactsMutation({ sessionId });
-    },
-    [getResearchArtifactsMutation]
-  );
-
-  const getResearchMemory = useCallback(
-    (sessionId: number) => {
-      return getResearchMemoryMutation({ sessionId });
-    },
-    [getResearchMemoryMutation]
-  );
-
-  const resetState = useCallback(() => {
+  const resetResearch = useCallback(() => {
     setState({
-      isLoading: false,
+      status: 'idle',
       progress: 0,
-      report: null,
-      findingsCount: 0,
-      citationsCount: 0,
+      result: null,
       error: null,
-      executionTime: null,
     });
   }, []);
 
   return {
-    ...state,
     startResearch,
-    getResearchPlans,
-    getResearchArtifacts,
-    getResearchMemory,
-    resetState,
+    researchState: state,
+    resetResearch,
   };
 }

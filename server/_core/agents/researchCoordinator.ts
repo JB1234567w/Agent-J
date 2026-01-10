@@ -9,7 +9,6 @@ import { MemoryManager } from "./memoryManager";
 import {
   AgentTask,
   OrchestratorState,
-  ResearchPlan,
   ResearchArtifact,
   Citation,
 } from "./types";
@@ -77,7 +76,6 @@ export class ResearchCoordinator {
 
       if (staleFindings.length > 0) {
         console.warn(`Found ${staleFindings.length} stale findings. Re-evaluating or re-researching might be needed.`);
-        // For now, we'll proceed with fresh research, but this can be expanded to re-research stale items.
       }
 
       const plan = await this.orchestrator.planResearch(request.query, request.context || {});
@@ -258,6 +256,7 @@ export class ResearchCoordinator {
           status: "idle",
           createdAt: new Date(),
           retrievedAt: new Date(),
+          updatedAt: new Date(),
         };
 
         const result = await this.factCheckAgent.execute(task);

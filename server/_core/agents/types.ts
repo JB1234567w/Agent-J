@@ -3,7 +3,7 @@
  * Defines the core types for orchestrator and worker agents
  */
 
-export type AgentRole = "orchestrator" | "searcher" | "extractor" | "fact_checker" | "synthesizer";
+export type AgentRole = "orchestrator" | "searcher" | "extractor" | "fact_checker" | "synthesizer" | "financial_analyst";
 
 export type AgentStatus = "idle" | "thinking" | "executing" | "waiting" | "completed" | "failed";
 
@@ -16,6 +16,7 @@ export interface AgentTask {
   status: AgentStatus;
   createdAt: Date;
   updatedAt: Date;
+  retrievedAt?: Date;
   result?: unknown;
   error?: string;
 }
@@ -35,7 +36,7 @@ export interface ResearchPlan {
 export interface ResearchArtifact {
   id: string;
   taskId: string;
-  type: "source" | "finding" | "analysis" | "citation";
+  type: "source" | "finding" | "analysis" | "citation" | "verified";
   content: string;
   metadata: Record<string, unknown>;
   createdAt: Date;
@@ -55,6 +56,7 @@ export interface ResearchMemory {
   sessionId: number;
   shortTermMemory: string; // Current research context
   longTermMemory: string; // Accumulated knowledge
+  findings: ResearchArtifact[]; // Cached findings
   lastUpdated: Date;
 }
 

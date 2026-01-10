@@ -1,1 +1,169 @@
-/**\n * Deep Research Panel Component\n * UI for initiating and displaying deep research results\n */\n\nimport React, { useState } from \"react\";\nimport { useDeepResearch } from \"../_core/hooks/useDeepResearch\";\nimport { Button } from \"./ui/button\";\nimport { Card, CardContent, CardDescription, CardHeader, CardTitle } from \"./ui/card\";\nimport { Input } from \"./ui/input\";\nimport { Badge } from \"./ui/badge\";\nimport { Progress } from \"./ui/progress\";\nimport { Loader2, Search, CheckCircle2, AlertCircle } from \"lucide-react\";\n\ninterface DeepResearchPanelProps {\n  sessionId: number;\n  onResearchComplete?: (report: string) => void;\n}\n\nexport function DeepResearchPanel({\n  sessionId,\n  onResearchComplete,\n}: DeepResearchPanelProps) {\n  const [query, setQuery] = useState(\"\");\n  const {\n    isLoading,\n    progress,\n    report,\n    findingsCount,\n    citationsCount,\n    error,\n    executionTime,\n    startResearch,\n    resetState,\n  } = useDeepResearch();\n\n  const handleStartResearch = async () => {\n    if (!query.trim()) return;\n\n    try {\n      const result = await startResearch(sessionId, query);\n      if (onResearchComplete) {\n        onResearchComplete(result.report);\n      }\n    } catch (err) {\n      console.error(\"Research failed:\", err);\n    }\n  };\n\n  const handleReset = () => {\n    resetState();\n    setQuery(\"\");\n  };\n\n  return (\n    <div className=\"w-full space-y-4\">\n      {/* Search Input */}\n      <Card>\n        <CardHeader>\n          <CardTitle className=\"flex items-center gap-2\">\n            <Search className=\"h-5 w-5\" />\n            Deep Research\n          </CardTitle>\n          <CardDescription>\n            Conduct comprehensive research using multiple AI agents\n          </CardDescription>\n        </CardHeader>\n        <CardContent className=\"space-y-4\">\n          <div className=\"flex gap-2\">\n            <Input\n              placeholder=\"Enter your research query...\"\n              value={query}\n              onChange={(e) => setQuery(e.target.value)}\n              disabled={isLoading}\n              onKeyPress={(e) => {\n                if (e.key === \"Enter\" && !isLoading) {\n                  handleStartResearch();\n                }\n              }}\n            />\n            <Button\n              onClick={handleStartResearch}\n              disabled={isLoading || !query.trim()}\n              className=\"gap-2\"\n            >\n              {isLoading ? (\n                <>\n                  <Loader2 className=\"h-4 w-4 animate-spin\" />\n                  Researching...\n                </>\n              ) : (\n                <>Research</>\n              )}\n            </Button>\n          </div>\n        </CardContent>\n      </Card>\n\n      {/* Progress Indicator */}\n      {isLoading && (\n        <Card>\n          <CardHeader>\n            <CardTitle className=\"text-sm\">Research in Progress</CardTitle>\n          </CardHeader>\n          <CardContent className=\"space-y-2\">\n            <Progress value={progress} className=\"h-2\" />\n            <p className=\"text-xs text-muted-foreground\">{progress}% complete</p>\n          </CardContent>\n        </Card>\n      )}\n\n      {/* Error Display */}\n      {error && (\n        <Card className=\"border-red-200 bg-red-50\">\n          <CardContent className=\"flex items-start gap-3 pt-6\">\n            <AlertCircle className=\"h-5 w-5 text-red-600 flex-shrink-0 mt-0.5\" />\n            <div>\n              <p className=\"font-medium text-red-900\">Research Failed</p>\n              <p className=\"text-sm text-red-700\">{error}</p>\n            </div>\n          </CardContent>\n        </Card>\n      )}\n\n      {/* Results Display */}\n      {report && (\n        <Card>\n          <CardHeader>\n            <div className=\"flex items-start justify-between\">\n              <div>\n                <CardTitle className=\"flex items-center gap-2\">\n                  <CheckCircle2 className=\"h-5 w-5 text-green-600\" />\n                  Research Complete\n                </CardTitle>\n                <CardDescription>Deep research results</CardDescription>\n              </div>\n              <Button variant=\"outline\" size=\"sm\" onClick={handleReset}>\n                New Research\n              </Button>\n            </div>\n          </CardHeader>\n          <CardContent className=\"space-y-4\">\n            {/* Stats */}\n            <div className=\"grid grid-cols-3 gap-4\">\n              <div className=\"space-y-1\">\n                <p className=\"text-xs text-muted-foreground\">Findings</p>\n                <Badge variant=\"secondary\" className=\"text-base\">\n                  {findingsCount}\n                </Badge>\n              </div>\n              <div className=\"space-y-1\">\n                <p className=\"text-xs text-muted-foreground\">Citations</p>\n                <Badge variant=\"secondary\" className=\"text-base\">\n                  {citationsCount}\n                </Badge>\n              </div>\n              <div className=\"space-y-1\">\n                <p className=\"text-xs text-muted-foreground\">Time</p>\n                <Badge variant=\"secondary\" className=\"text-base\">\n                  {executionTime ? `${(executionTime / 1000).toFixed(1)}s` : \"—\"}\n                </Badge>\n              </div>\n            </div>\n\n            {/* Report */}\n            <div className=\"space-y-2\">\n              <p className=\"text-sm font-medium\">Research Report</p>\n              <div className=\"bg-muted p-4 rounded-lg max-h-96 overflow-y-auto\">\n                <p className=\"text-sm whitespace-pre-wrap text-muted-foreground\">\n                  {report}\n                </p>\n              </div>\n            </div>\n          </CardContent>\n        </Card>\n      )}\n    </div>\n  );\n}\n
+import React, { useState } from 'react';
+import { useDeepResearch } from '../_core/hooks/useDeepResearch';
+import { useLLMProvider } from '../_core/hooks/useLLMProvider';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from './ui/card';
+import { Button } from './ui/button';
+import { Input } from './ui/input';
+import { Progress } from './ui/progress';
+import { Badge } from './ui/badge';
+import { ScrollArea } from './ui/scroll-area';
+import { Search, Play, CheckCircle, AlertCircle, Loader2, FileText, Link as LinkIcon } from 'lucide-react';
+
+export const DeepResearchPanel: React.FC = () => {
+  const [query, setQuery] = useState('');
+  const { startResearch, researchState, resetResearch } = useDeepResearch();
+  const { selectedModel } = useLLMProvider();
+
+  const handleStartResearch = async () => {
+    if (!query.trim()) return;
+    await startResearch(query, selectedModel);
+  };
+
+  return (
+    <Card className="w-full max-w-4xl mx-auto shadow-xl border-t-4 border-t-primary">
+      <CardHeader className="bg-muted/30">
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle className="text-2xl flex items-center gap-2">
+              <Search className="w-6 h-6 text-primary" />
+              Deep Research Agent
+            </CardTitle>
+            <CardDescription>
+              Advanced multi-agent research system for comprehensive analysis
+            </CardDescription>
+          </div>
+          {researchState.status === 'completed' && (
+            <Button variant="outline" size="sm" onClick={resetResearch}>
+              New Research
+            </Button>
+          )}
+        </div>
+      </CardHeader>
+      <CardContent className="p-6">
+        <div className="space-y-6">
+          {/* Input Section */}
+          <div className="flex gap-2">
+            <Input
+              placeholder="Enter your research query (e.g., 'Latest developments in quantum computing')"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              disabled={researchState.status === 'searching' || researchState.status === 'analyzing' || researchState.status === 'synthesizing'}
+              className="flex-1"
+            />
+            <Button 
+              onClick={handleStartResearch} 
+              disabled={!query.trim() || researchState.status !== 'idle'}
+              className="bg-primary hover:bg-primary/90"
+            >
+              {researchState.status === 'idle' ? (
+                <>
+                  <Play className="w-4 h-4 mr-2" />
+                  Start Research
+                </>
+              ) : (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Researching...
+                </>
+              )}
+            </Button>
+          </div>
+
+          {/* Progress Section */}
+          {researchState.status !== 'idle' && researchState.status !== 'completed' && (
+            <div className="space-y-2 animate-in fade-in slide-in-from-top-4 duration-500">
+              <div className="flex justify-between text-sm font-medium">
+                <span className="capitalize flex items-center gap-2">
+                  <Loader2 className="w-3 h-3 animate-spin" />
+                  {researchState.status}...
+                </span>
+                <span>{researchState.progress}%</span>
+              </div>
+              <Progress value={researchState.progress} className="h-2" />
+              <p className="text-xs text-muted-foreground italic">
+                {researchState.status === 'searching' && "Worker agents are scouring the web for information..."}
+                {researchState.status === 'analyzing' && "Extracting key insights and analyzing data..."}
+                {researchState.status === 'synthesizing' && "Fact-checking and synthesizing the final report..."}
+              </p>
+            </div>
+          )}
+
+          {/* Error Section */}
+          {researchState.error && (
+            <div className="bg-destructive/10 border border-destructive/20 p-4 rounded-lg flex items-start gap-3 text-destructive animate-in zoom-in-95 duration-300">
+              <AlertCircle className="w-5 h-5 mt-0.5" />
+              <div>
+                <p className="font-semibold">Research Failed</p>
+                <p className="text-sm opacity-90">{researchState.error}</p>
+              </div>
+            </div>
+          )}
+
+          {/* Results Section */}
+          {researchState.status === 'completed' && researchState.result && (
+            <div className="space-y-6 animate-in fade-in zoom-in-95 duration-700">
+              <div className="bg-green-500/10 border border-green-500/20 p-4 rounded-lg flex items-center gap-3 text-green-700 dark:text-green-400">
+                <CheckCircle className="w-5 h-5" />
+                <div>
+                  <p className="font-semibold">Research Complete</p>
+                  <p className="text-sm opacity-90">Successfully synthesized findings from multiple sources.</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-3 gap-4">
+                <div className="bg-muted/50 p-4 rounded-lg text-center">
+                  <p className="text-xs text-muted-foreground uppercase font-bold tracking-wider mb-1">Findings</p>
+                  <p className="text-2xl font-bold text-primary">{researchState.result.findings.length}</p>
+                </div>
+                <div className="bg-muted/50 p-4 rounded-lg text-center">
+                  <p className="text-xs text-muted-foreground uppercase font-bold tracking-wider mb-1">Citations</p>
+                  <p className="text-2xl font-bold text-primary">{researchState.result.citations.length}</p>
+                </div>
+                <div className="bg-muted/50 p-4 rounded-lg text-center">
+                  <p className="text-xs text-muted-foreground uppercase font-bold tracking-wider mb-1">Time</p>
+                  <p className="text-2xl font-bold text-primary">{(researchState.result.executionTime / 1000).toFixed(1)}s</p>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <h3 className="text-lg font-semibold flex items-center gap-2">
+                  <FileText className="w-5 h-5 text-primary" />
+                  Research Report
+                </h3>
+                <ScrollArea className="h-[400px] w-full rounded-md border p-4 bg-card">
+                  <div className="prose prose-sm dark:prose-invert max-w-none">
+                    {researchState.result.report.split('\n').map((line, i) => (
+                      <p key={i}>{line}</p>
+                    ))}
+                  </div>
+                </ScrollArea>
+              </div>
+
+              {researchState.result.citations.length > 0 && (
+                <div className="space-y-2">
+                  <h3 className="text-lg font-semibold flex items-center gap-2">
+                    <LinkIcon className="w-5 h-5 text-primary" />
+                    Sources & Citations
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                    {researchState.result.citations.map((citation, i) => (
+                      <div key={i} className="flex items-center gap-2 p-2 rounded border bg-muted/30 text-xs truncate">
+                        <Badge variant="outline" className="shrink-0">{i + 1}</Badge>
+                        <span className="font-medium truncate">{citation.title || citation.source}</span>
+                        {citation.url && (
+                          <a href={citation.url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline ml-auto shrink-0">
+                            View Source
+                          </a>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  );
+};

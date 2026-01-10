@@ -28,7 +28,7 @@ export const deepResearchRouter = router({
       z.object({
         sessionId: z.number(),
         query: z.string().min(10, "Query must be at least 10 characters"),
-        context: z.record(z.unknown()).optional(),
+        context: z.record(z.string(), z.unknown()).optional(),
         llmModel: z.string().optional(),
       })
     )

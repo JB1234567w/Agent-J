@@ -6,17 +6,16 @@
 import { BaseAgent } from "./baseAgent";
 import {
   getStockQuote,
-  getHistoricalData,
-  getFinancialStatements,
   getCompanyProfile,
-  getAnalystRecommendations,
-  getDividendInfo,
   getKeyMetrics,
+  getAnalystRecommendations,
   analyzeStockPerformance,
   getEarningsInfo,
   getStockNews,
+  getFinancialStatements,
 } from "./tools/yahooFinance";
 import { AgentTask } from "./types";
+import { nanoid } from "nanoid";
 
 export class FinancialAnalystAgent extends BaseAgent {
   constructor(model: string = "gemini-2.5-flash") {
@@ -98,13 +97,17 @@ Provide a comprehensive analysis including:
 
       // Execute analysis through LLM
       const task: AgentTask = {
-        id: `analysis-${symbol}-${Date.now()}`,
+        id: `analysis-${symbol}-${nanoid()}`,
+        agentRole: "extractor",
         description: analysisPrompt,
         context: { symbol },
+        status: "idle",
+        createdAt: new Date(),
+        updatedAt: new Date(),
       };
 
       const result = await this.execute(task);
-      return result.output;
+      return result.result as string;
     } catch (error) {
       throw new Error(`Failed to analyze stock ${symbol}: ${error}`);
     }
@@ -150,13 +153,17 @@ Provide a detailed comparison including:
 5. Investment recommendation ranking`;
 
       const task: AgentTask = {
-        id: `comparison-${symbols.join("-")}-${Date.now()}`,
+        id: `comparison-${symbols.join("-")}-${nanoid()}`,
+        agentRole: "extractor",
         description: comparisonPrompt,
         context: { symbols },
+        status: "idle",
+        createdAt: new Date(),
+        updatedAt: new Date(),
       };
 
       const result = await this.execute(task);
-      return result.output;
+      return result.result as string;
     } catch (error) {
       throw new Error(`Failed to compare stocks: ${error}`);
     }
@@ -179,13 +186,17 @@ Provide analysis on:
 6. Risk factors specific to the sector`;
 
       const task: AgentTask = {
-        id: `sector-analysis-${sector}-${Date.now()}`,
+        id: `sector-analysis-${sector}-${nanoid()}`,
+        agentRole: "extractor",
         description: sectorAnalysisPrompt,
         context: { sector, symbols },
+        status: "idle",
+        createdAt: new Date(),
+        updatedAt: new Date(),
       };
 
       const result = await this.execute(task);
-      return result.output;
+      return result.result as string;
     } catch (error) {
       throw new Error(`Failed to analyze sector trends: ${error}`);
     }
@@ -215,13 +226,17 @@ Provide:
 6. Alternative investment options`;
 
       const task: AgentTask = {
-        id: `portfolio-${Date.now()}`,
+        id: `portfolio-${nanoid()}`,
+        agentRole: "extractor",
         description: portfolioPrompt,
         context: { investmentAmount, riskTolerance, investmentHorizon },
+        status: "idle",
+        createdAt: new Date(),
+        updatedAt: new Date(),
       };
 
       const result = await this.execute(task);
-      return result.output;
+      return result.result as string;
     } catch (error) {
       throw new Error(`Failed to generate portfolio recommendation: ${error}`);
     }
@@ -244,13 +259,17 @@ Analyze:
 6. Sector diversification in dividend portfolio`;
 
       const task: AgentTask = {
-        id: `dividend-search-${Date.now()}`,
+        id: `dividend-search-${nanoid()}`,
+        agentRole: "extractor",
         description: dividendPrompt,
         context: { minYield },
+        status: "idle",
+        createdAt: new Date(),
+        updatedAt: new Date(),
       };
 
       const result = await this.execute(task);
-      return result.output;
+      return result.result as string;
     } catch (error) {
       throw new Error(`Failed to find dividend opportunities: ${error}`);
     }
@@ -292,24 +311,19 @@ Evaluate:
 6. Overall earnings quality rating`;
 
       const task: AgentTask = {
-        id: `earnings-quality-${symbol}-${Date.now()}`,
+        id: `earnings-quality-${symbol}-${nanoid()}`,
+        agentRole: "extractor",
         description: earningsQualityPrompt,
         context: { symbol },
+        status: "idle",
+        createdAt: new Date(),
+        updatedAt: new Date(),
       };
 
       const result = await this.execute(task);
-      return result.output;
+      return result.result as string;
     } catch (error) {
       throw new Error(`Failed to assess earnings quality: ${error}`);
     }
-  }
-
-  getTools() {
-    // Return financial analysis tools
-    return [];
-  }
-
-  buildMessages() {
-    return [];
   }
 }

@@ -1,5 +1,5 @@
 import { LLMProvider } from "./LLMProvider";
-import { Message, Tool, ToolChoice, InvokeResult, ResponseFormat, InvokeParams, TextContent, ImageContent, FileContent, MessageContent } from "./types";
+import { Message, InvokeResult, InvokeParams, TextContent, ImageContent } from "./types";
 import { ENV } from "../env";
 
 export class GoogleGeminiProvider implements LLMProvider {
@@ -19,28 +19,36 @@ export class GoogleGeminiProvider implements LLMProvider {
       messages,
       model,
       maxTokens,
-      responseFormat,
     } = params;
 
-    const geminiMessages = messages.map(msg => {
-      const content = Array.isArray(msg.content) ? msg.content.map(c => {
-        if (c.type === "text") return { text: c.text };
-        if (c.type === "image_url") return { image: { base64: this.fetchImageAsBase64(c.image_url.url) } }; // Gemini expects base64
-        return {};
-      }) : [{ text: msg.content as string }];
+    const geminiMessages = await Promise.all(messages.map(async msg => {
+      let parts: any[] = [];
+      
+      if (typeof msg.content === "string") {
+        parts = [{ text: msg.content }];
+      } else if (Array.isArray(msg.content)) {
+        parts = await Promise.all(msg.content.map(async c => {
+          if (typeof c === "string") return { text: c };
+          if (c.type === "text") return { text: (c as TextContent).text };
+          if (c.type === "image_url") {
+            const base64 = await this.fetchImageAsBase64((c as ImageContent).image_url.url);
+            return { inline_data: { mime_type: "image/jpeg", data: base64 } };
+          }
+          return {};
+        }));
+      }
 
       return {
-        role: msg.role === "assistant" ? "model" : msg.role,
-        parts: content,
+        role: msg.role === "assistant" ? "model" : "user",
+        parts,
       };
-    });
+    }));
 
     const payload: Record<string, unknown> = {
       contents: geminiMessages,
       generationConfig: {
         maxOutputTokens: maxTokens,
       },
-      // tools: params.tools, // Gemini tool format might differ
     };
 
     const response = await fetch(`${this.baseUrl}/models/${model}:generateContent?key=${this.apiKey}`, {
@@ -94,13 +102,12 @@ export class GoogleGeminiProvider implements LLMProvider {
       return jsonResponse.models.map((m: { name: string }) => m.name);
     } catch (error) {
       console.error("Error fetching Gemini models:", error);
-      return [];
+      return ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-2.0-flash-exp"];
     }
   }
 
   private async fetchImageAsBase64(url: string): Promise<string> {
     // In a real application, you would fetch the image from the URL and convert it to base64.
-    // For this example, we'll return a placeholder.
     console.warn("Image fetching and base64 conversion not fully implemented for Gemini. Using placeholder.");
     return "PLACEHOLDER_BASE64_IMAGE_DATA";
   }

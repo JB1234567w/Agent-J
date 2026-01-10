@@ -4,7 +4,7 @@
  */
 
 import { useState, useCallback } from "react";
-import { trpc } from "../trpc";
+import { trpc } from "../../lib/trpc";
 
 export interface StockAnalysisState {
   isLoading: boolean;
@@ -33,26 +33,12 @@ export function useFinancialResearch() {
     error: null,
   });
 
-  // Query hooks
-  const getStockQuoteQuery = trpc.financialResearch.getStockQuote.useQuery;
-  const getHistoricalDataQuery = trpc.financialResearch.getHistoricalData.useQuery;
-  const getFinancialStatementsQuery = trpc.financialResearch.getFinancialStatements.useQuery;
-  const getCompanyProfileQuery = trpc.financialResearch.getCompanyProfile.useQuery;
-  const getAnalystRecommendationsQuery = trpc.financialResearch.getAnalystRecommendations.useQuery;
-  const getDividendInfoQuery = trpc.financialResearch.getDividendInfo.useQuery;
-  const getKeyMetricsQuery = trpc.financialResearch.getKeyMetrics.useQuery;
-  const analyzeStockPerformanceQuery = trpc.financialResearch.analyzeStockPerformance.useQuery;
-  const getEarningsInfoQuery = trpc.financialResearch.getEarningsInfo.useQuery;
-  const getStockNewsQuery = trpc.financialResearch.getStockNews.useQuery;
-  const compareStocksQuery = trpc.financialResearch.compareStocks.useQuery;
-  const screenStocksQuery = trpc.financialResearch.screenStocks.useQuery;
-
   // Mutation hooks
-  const analyzeStockMutation = trpc.financialResearch.analyzeStock.useMutation;
-  const compareStocksWithAnalysisMutation = trpc.financialResearch.compareStocksWithAnalysis.useMutation;
-  const generatePortfolioRecommendationMutation = trpc.financialResearch.generatePortfolioRecommendation.useMutation;
-  const findDividendOpportunitiesMutation = trpc.financialResearch.findDividendOpportunities.useMutation;
-  const assessEarningsQualityMutation = trpc.financialResearch.assessEarningsQuality.useMutation;
+  const analyzeStockMutation = trpc.financialResearch.analyzeStock.useMutation();
+  const compareStocksWithAnalysisMutation = trpc.financialResearch.compareStocksWithAnalysis.useMutation();
+  const generatePortfolioRecommendationMutation = trpc.financialResearch.generatePortfolioRecommendation.useMutation();
+  const findDividendOpportunitiesMutation = trpc.financialResearch.findDividendOpportunities.useMutation();
+  const assessEarningsQualityMutation = trpc.financialResearch.assessEarningsQuality.useMutation();
 
   // Stock analysis
   const analyzeStock = useCallback(
@@ -197,27 +183,6 @@ export function useFinancialResearch() {
     [assessEarningsQualityMutation]
   );
 
-  // Get stock quote
-  const getStockQuote = useCallback(
-    (symbol: string) => {
-      return getStockQuoteQuery({ symbol });
-    },
-    [getStockQuoteQuery]
-  );
-
-  // Get historical data
-  const getHistoricalData = useCallback(
-    (symbol: string, startDate: string, endDate: string, interval?: "1d" | "1wk" | "1mo") => {
-      return getHistoricalDataQuery({
-        symbol,
-        startDate,
-        endDate,
-        interval,
-      });
-    },
-    [getHistoricalDataQuery]
-  );
-
   // Reset states
   const resetAnalysisState = useCallback(() => {
     setAnalysisState({
@@ -247,20 +212,6 @@ export function useFinancialResearch() {
     generatePortfolioRecommendation,
     findDividendOpportunities,
     assessEarningsQuality,
-
-    // Data fetching
-    getStockQuote,
-    getHistoricalData,
-    getFinancialStatementsQuery,
-    getCompanyProfileQuery,
-    getAnalystRecommendationsQuery,
-    getDividendInfoQuery,
-    getKeyMetricsQuery,
-    analyzeStockPerformanceQuery,
-    getEarningsInfoQuery,
-    getStockNewsQuery,
-    compareStocksQuery,
-    screenStocksQuery,
 
     // Reset functions
     resetAnalysisState,

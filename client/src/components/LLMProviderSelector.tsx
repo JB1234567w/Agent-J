@@ -1,1 +1,127 @@
-/**\n * LLM Provider Selector Component\n * Allows users to select LLM provider and model\n */\n\nimport React from \"react\";\nimport { useLLMProvider } from \"../_core/hooks/useLLMProvider\";\nimport { Button } from \"./ui/button\";\nimport { Card, CardContent, CardDescription, CardHeader, CardTitle } from \"./ui/card\";\nimport { Input } from \"./ui/input\";\nimport { Label } from \"./ui/label\";\nimport {\n  Select,\n  SelectContent,\n  SelectItem,\n  SelectTrigger,\n  SelectValue,\n} from \"./ui/select\";\nimport { Zap, Cloud, Server } from \"lucide-react\";\n\ninterface LLMProviderSelectorProps {\n  onConfigChange?: (config: any) => void;\n}\n\nexport function LLMProviderSelector({\n  onConfigChange,\n}: LLMProviderSelectorProps) {\n  const {\n    config,\n    availableModels,\n    setProvider,\n    setModel,\n    setApiKey,\n    setApiUrl,\n  } = useLLMProvider();\n\n  const handleProviderChange = (provider: string) => {\n    setProvider(provider as \"openai\" | \"gemini\" | \"ollama\");\n    onConfigChange?.(config);\n  };\n\n  const handleModelChange = (model: string) => {\n    setModel(model);\n    onConfigChange?.(config);\n  };\n\n  const getProviderIcon = (provider: string) => {\n    switch (provider) {\n      case \"openai\":\n        return <Zap className=\"h-5 w-5\" />;\n      case \"gemini\":\n        return <Cloud className=\"h-5 w-5\" />;\n      case \"ollama\":\n        return <Server className=\"h-5 w-5\" />;\n      default:\n        return null;\n    }\n  };\n\n  const getProviderDescription = (provider: string) => {\n    switch (provider) {\n      case \"openai\":\n        return \"Use OpenAI GPT models via API\";\n      case \"gemini\":\n        return \"Use Google Gemini models\";\n      case \"ollama\":\n        return \"Use local Ollama models\";\n      default:\n        return \"\";\n    }\n  };\n\n  return (\n    <Card>\n      <CardHeader>\n        <CardTitle className=\"flex items-center gap-2\">\n          {getProviderIcon(config.provider)}\n          LLM Provider Configuration\n        </CardTitle>\n        <CardDescription>\n          Select your preferred LLM provider and model\n        </CardDescription>\n      </CardHeader>\n      <CardContent className=\"space-y-6\">\n        {/* Provider Selection */}\n        <div className=\"space-y-3\">\n          <Label htmlFor=\"provider\">LLM Provider</Label>\n          <Select value={config.provider} onValueChange={handleProviderChange}>\n            <SelectTrigger id=\"provider\">\n              <SelectValue />\n            </SelectTrigger>\n            <SelectContent>\n              <SelectItem value=\"openai\">\n                <div className=\"flex items-center gap-2\">\n                  <Zap className=\"h-4 w-4\" />\n                  OpenAI\n                </div>\n              </SelectItem>\n              <SelectItem value=\"gemini\">\n                <div className=\"flex items-center gap-2\">\n                  <Cloud className=\"h-4 w-4\" />\n                  Google Gemini\n                </div>\n              </SelectItem>\n              <SelectItem value=\"ollama\">\n                <div className=\"flex items-center gap-2\">\n                  <Server className=\"h-4 w-4\" />\n                  Ollama (Local)\n                </div>\n              </SelectItem>\n            </SelectContent>\n          </Select>\n          <p className=\"text-xs text-muted-foreground\">\n            {getProviderDescription(config.provider)}\n          </p>\n        </div>\n\n        {/* Model Selection */}\n        <div className=\"space-y-3\">\n          <Label htmlFor=\"model\">Model</Label>\n          <Select value={config.model} onValueChange={handleModelChange}>\n            <SelectTrigger id=\"model\">\n              <SelectValue />\n            </SelectTrigger>\n            <SelectContent>\n              {availableModels.map((model) => (\n                <SelectItem key={model} value={model}>\n                  {model}\n                </SelectItem>\n              ))}\n            </SelectContent>\n          </Select>\n        </div>\n\n        {/* Provider-Specific Configuration */}\n        {config.provider === \"openai\" && (\n          <div className=\"space-y-3 border-t pt-4\">\n            <Label htmlFor=\"openai-key\">API Key (Optional)</Label>\n            <Input\n              id=\"openai-key\"\n              type=\"password\"\n              placeholder=\"sk-...\"\n              value={config.apiKey || \"\"}\n              onChange={(e) => setApiKey(e.target.value)}\n            />\n            <p className=\"text-xs text-muted-foreground\">\n              Leave empty to use server-side configuration\n            </p>\n          </div>\n        )}\n\n        {config.provider === \"gemini\" && (\n          <div className=\"space-y-3 border-t pt-4\">\n            <Label htmlFor=\"gemini-key\">Google API Key (Optional)</Label>\n            <Input\n              id=\"gemini-key\"\n              type=\"password\"\n              placeholder=\"AIza...\"\n              value={config.apiKey || \"\"}\n              onChange={(e) => setApiKey(e.target.value)}\n            />\n            <p className=\"text-xs text-muted-foreground\">\n              Leave empty to use server-side configuration\n            </p>\n          </div>\n        )}\n\n        {config.provider === \"ollama\" && (\n          <div className=\"space-y-3 border-t pt-4\">\n            <Label htmlFor=\"ollama-url\">Ollama API URL (Optional)</Label>\n            <Input\n              id=\"ollama-url\"\n              type=\"text\"\n              placeholder=\"http://localhost:11434/api\"\n              value={config.apiUrl || \"\"}\n              onChange={(e) => setApiUrl(e.target.value)}\n            />\n            <p className=\"text-xs text-muted-foreground\">\n              Default: http://localhost:11434/api\n            </p>\n          </div>\n        )}\n      </CardContent>\n    </Card>\n  );\n}\n
+import React from 'react';
+import { useLLMProvider } from '../_core/hooks/useLLMProvider';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from './ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
+import { Input } from './ui/input';
+import { Label } from './ui/label';
+import { Badge } from './ui/badge';
+import { Brain, Zap, Cloud, Monitor, Info } from 'lucide-react';
+
+export const LLMProviderSelector: React.FC = () => {
+  const {
+    selectedProvider,
+    setSelectedProvider,
+    selectedModel,
+    setSelectedModel,
+    apiKey,
+    setApiKey,
+    availableProviders,
+    currentProviderModels
+  } = useLLMProvider();
+
+  const getProviderIcon = (providerId: string) => {
+    switch (providerId) {
+      case 'openai': return <Zap className="w-4 h-4 text-yellow-500" />;
+      case 'google': return <Cloud className="w-4 h-4 text-blue-500" />;
+      case 'ollama': return <Monitor className="w-4 h-4 text-green-500" />;
+      default: return <Brain className="w-4 h-4" />;
+    }
+  };
+
+  return (
+    <Card className="w-full shadow-lg border-l-4 border-l-primary">
+      <CardHeader>
+        <CardTitle className="text-xl flex items-center gap-2">
+          <Brain className="w-5 h-5 text-primary" />
+          LLM Configuration
+        </CardTitle>
+        <CardDescription>
+          Select your preferred AI provider and model for research tasks
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        {/* Provider Selection */}
+        <div className="space-y-2">
+          <Label htmlFor="provider" className="text-sm font-semibold">AI Provider</Label>
+          <div className="grid grid-cols-1 gap-2">
+            {availableProviders.map((provider) => (
+              <div
+                key={provider.id}
+                onClick={() => setSelectedProvider(provider.id as any)}
+                className={`
+                  flex items-center justify-between p-3 rounded-lg border-2 cursor-pointer transition-all
+                  ${selectedProvider === provider.id 
+                    ? 'border-primary bg-primary/5 shadow-sm' 
+                    : 'border-muted hover:border-muted-foreground/30 hover:bg-muted/30'}
+                `}
+              >
+                <div className="flex items-center gap-3">
+                  <div className={`p-2 rounded-full ${selectedProvider === provider.id ? 'bg-primary/10' : 'bg-muted'}`}>
+                    {getProviderIcon(provider.id)}
+                  </div>
+                  <div>
+                    <p className="font-medium text-sm">{provider.name}</p>
+                    <p className="text-xs text-muted-foreground">{provider.description}</p>
+                  </div>
+                </div>
+                {selectedProvider === provider.id && (
+                  <Badge variant="default" className="bg-primary text-[10px] h-5">Active</Badge>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Model Selection */}
+        <div className="space-y-2">
+          <Label htmlFor="model" className="text-sm font-semibold">Model</Label>
+          <Select value={selectedModel} onValueChange={setSelectedModel}>
+            <SelectTrigger id="model" className="w-full">
+              <SelectValue placeholder="Select a model" />
+            </SelectTrigger>
+            <SelectContent>
+              {currentProviderModels.map((model) => (
+                <SelectItem key={model} value={model}>
+                  {model}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* API Key (Optional) */}
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <Label htmlFor="apiKey" className="text-sm font-semibold">API Key (Optional)</Label>
+            <Badge variant="outline" className="text-[10px] font-normal">Stored Locally</Badge>
+          </div>
+          <Input
+            id="apiKey"
+            type="password"
+            placeholder={selectedProvider === 'ollama' ? 'Not required for local Ollama' : 'Enter your API key...'}
+            value={apiKey}
+            onChange={(e) => setApiKey(e.target.value)}
+            disabled={selectedProvider === 'ollama'}
+            className="font-mono text-xs"
+          />
+          <p className="text-[10px] text-muted-foreground flex items-center gap-1">
+            <Info className="w-3 h-3" />
+            Leave empty to use the server's default configuration.
+          </p>
+        </div>
+
+        {/* Provider Info Alert */}
+        <div className="bg-muted/50 p-3 rounded-lg border border-muted-foreground/10">
+          <div className="flex gap-2">
+            <Info className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+            <div className="text-[11px] leading-relaxed text-muted-foreground">
+              {selectedProvider === 'openai' && "OpenAI provides high-performance models like GPT-4. Requires a valid API key or server configuration."}
+              {selectedProvider === 'google' && "Google Gemini offers advanced reasoning and large context windows. Great for deep analysis."}
+              {selectedProvider === 'ollama' && "Ollama runs models locally on your machine. Maximum privacy and no API costs, but performance depends on your hardware."}
+            </div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
